@@ -1,65 +1,28 @@
 # -*- coding: utf-8 -*-
-import socket
 import sys
-import json
 
 from download import DownloadThread
 from Queue import Queue
+from server import Server
 
-class DownloadService():
-
-    PORT = 6736
+###
+# creates a downloader service listening on IP for dl execution urls
+###
+class DownloadService(Server):
 
     def __init__(self, threadNum, port=6736):
+        Server.__init__(self, port)
         self.threadNum = threadNum
-        self.PORT = port
         self.queue = Queue()
-        self.prepareThreadPool()
-        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.create_socket()
+        self.prepare_thread_pool()
 
-    def prepareThreadPool(self):
+    def prepare_thread_pool(self):
         for i in range(self.threadNum):
             t = DownloadThread(self.queue)
             t.start()
 
-    def create_socket(self):
-        self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-
-        # Bind the socket to the port
-        server_address = ('localhost', self.PORT)
-        print >>sys.stdout, 'starting up on %s port %s' % server_address
-        self.sock.bind(server_address)
-
-    def start_listen(self):
-        # Listen for incoming connections
-        self.sock.listen(1)
-
-        while True:
-            # Wait for a connection
-            print >>sys.stderr, 'waiting for a connection'
-            connection, client_address = self.sock.accept()
-            data = ""
-            try:
-                print >>sys.stdout, 'connection from', client_address
-                retmsg = ""
-                while True:
-                    datatmp = connection.recv(100)
-                    if not datatmp:
-                        break
-                    data += datatmp
-                retmsg = self.handle_command(json.loads(data))
-
-                # self.sock.sendall(retmsg)
-
-
-            finally:
-                # Clean up the connection
-                print >> sys.stderr, "closing connection"
-                connection.close()
-
     def handle_command(self, msg):
-        print >> sys.stdout, 'received "%s"' % json.dumps(msg)
+        Server.handle_command(self, msg)
         if msg.has_key('command'):
             if msg.get('command') == 'add':
                 return self.download_file(msg)

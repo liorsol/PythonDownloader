@@ -7,6 +7,10 @@ import time
 
 from Queue import Queue
 
+###
+# Downloader thread,
+# Pops dl request from a given queue and handle the dl in a separated thread
+###
 class DownloadThread(threading.Thread):
     def __init__(self, queue):
         print >> sys.stdout, "Creating DownloadThread"
@@ -54,6 +58,8 @@ class DownloadThread(threading.Thread):
         return destfile
 
 
+
+### Test
 def download(urls, destfolder, numthreads=4):
     queue = Queue()
     for url in urls:
